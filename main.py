@@ -8,3 +8,7 @@ app = FastAPI(
 )
 
 app.include_router(router)
+
+@app.get("/")
+def root():
+    return {"status": "Pulse AI backend is running"}
