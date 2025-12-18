@@ -8,6 +8,7 @@ from database.models import PulseRecording, PulseFeatures, DoshaAnalysis
 from signal_processing.preprocessing import bandpass_filter, detect_peaks, segment_beats
 from signal_processing.feature_extraction import extract_all_features
 from core.dosha_mapping import compute_dosha_scores
+from utils.sanitize import sanitize_features
 
 router = APIRouter()
 
@@ -57,7 +58,7 @@ def upload_pulse(
     beats = segment_beats(filtered, peaks)
 
     features = extract_all_features(filtered, sampling_rate, peaks, beats)
-
+    features = sanitize_features(features)
     feature_row = PulseFeatures(
         recording_id=recording.recording_id,
         **features
@@ -95,3 +96,4 @@ def register_patient(name: str, age: int, gender: str, db: Session = Depends(get
         "patient_id": patient.patient_id,
         "message": "Patient registered successfully"
     }
+
