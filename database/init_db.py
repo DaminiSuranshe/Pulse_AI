@@ -1,5 +1,6 @@
-from database.db import engine
-from database.models import Base
+from database.db import Base, engine
+from .models.patient import Patient
+# import other models later (PulseRecording, Features, etc.)
 
-Base.metadata.create_all(bind=engine)
-print("Database tables created successfully.")
+def init_db():
+    Base.metadata.create_all(bind=engine)
