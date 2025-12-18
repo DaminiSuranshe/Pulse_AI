@@ -1,11 +1,15 @@
 import numpy as np
 from scipy.signal import butter, filtfilt, find_peaks
 
-def bandpass_filter(signal, fs, lowcut=0.5, highcut=8.0, order=4):
+def bandpass_filter(signal, fs, lowcut=0.5, highcut=5.0, order=3):
     """
     Bandpass filter for PPG signal
     Removes motion artifacts & high-frequency noise
     """
+    if len(signal) < 30:
+        raise ValueError(
+            f"Signal too short for filtering. Need at least 30 samples, got {len(signal)}"
+        )
     nyq = 0.5 * fs
     low = lowcut / nyq
     high = highcut / nyq
