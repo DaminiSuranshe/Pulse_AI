@@ -3,10 +3,7 @@ from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.ext.declarative import declarative_base
 from datetime import datetime
 import uuid
-
-Base = declarative_base()
-
-
+from database.db import Base
 class Patient(Base):
     __tablename__ = "patients"
     patient_id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
@@ -14,8 +11,6 @@ class Patient(Base):
     age = Column(Integer)
     gender = Column(String)
     created_at = Column(DateTime, default=datetime.utcnow)
-
-
 class PulseRecording(Base):
     __tablename__ = "pulse_recordings"
     recording_id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
@@ -24,8 +19,6 @@ class PulseRecording(Base):
     duration_sec = Column(Integer)
     raw_file_path = Column(String)
     recorded_at = Column(DateTime, default=datetime.utcnow)
-
-
 class PulseFeatures(Base):
     __tablename__ = "pulse_features"
     feature_id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
@@ -37,8 +30,6 @@ class PulseFeatures(Base):
     pulse_irregularity = Column(Float)
     pulse_amplitude_mean = Column(Float)
     pulse_amplitude_std = Column(Float)
-
-
 class DoshaAnalysis(Base):
     __tablename__ = "dosha_analysis"
     analysis_id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
