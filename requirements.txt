@@ -30,3 +30,8 @@ python-multipart>=0.0.9
 # Optional (Logging / Env)
 # ----------------------------
 python-dotenv>=1.0.0
+
+# ----------------------------
+# Database (ORM)
+# ----------------------------
+sqlalchemy>=2.0.0
