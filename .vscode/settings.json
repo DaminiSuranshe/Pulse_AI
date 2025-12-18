@@ -1,3 +1,19 @@
 {
-    "python-envs.pythonProjects": []
+    "python-envs.pythonProjects": [],
+    "sqltools.connections": [
+        {
+            "ssh": "Disabled",
+            "previewLimit": 50,
+            "server": "localhost",
+            "port": 5432,
+            "sshOptions": {
+                "port": 22,
+                "username": "post"
+            },
+            "driver": "PostgreSQL",
+            "name": "Pulse_AI",
+            "username": "postgres",
+            "database": "ayurveda_ai"
+        }
+    ]
 }
