@@ -1,4 +1,5 @@
 import numpy as np
+import neurokit2 as nk
 from scipy.signal import butter, filtfilt, find_peaks
 
 def bandpass_filter(signal, fs, lowcut=0.5, highcut=5.0, order=3):
@@ -19,24 +20,21 @@ def bandpass_filter(signal, fs, lowcut=0.5, highcut=5.0, order=3):
 
     return filtered_signal
 
-
 def detect_peaks(ppg_signal, fs):
-    """
-    Detect systolic peaks in PPG waveform
-    """
-    distance = int(0.4 * fs)  # minimum distance between beats
-    peaks, _ = find_peaks(ppg_signal, distance=distance, prominence=0.2)
+    try:
+        signals, info = nk.ppg_process(ppg_signal, sampling_rate=fs)
+        peaks = info["PPG_Peaks"]
+        return np.array(peaks, dtype=int)
+    except Exception as e:
+        print("Peak detection failed:", e)
+        return np.array([])
 
-    return peaks
-
-
-def segment_beats(ppg_signal, peaks):
-    """
-    Segment pulse waveform into individual beats
-    """
+def segment_beats(signal, peaks, window=50):
     beats = []
-    for i in range(len(peaks) - 1):
-        beat = ppg_signal[peaks[i]:peaks[i + 1]]
-        beats.append(beat)
-
+    for p in peaks:
+        start = max(0, p - window)
+        end = min(len(signal), p + window)
+        beat = signal[start:end]
+        if len(beat) > 10:
+            beats.append(beat)
     return beats
