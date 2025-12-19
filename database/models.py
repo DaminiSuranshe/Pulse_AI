@@ -20,7 +20,6 @@ class PulseRecording(Base):
     raw_file_path = Column(String)
     recorded_at = Column(DateTime, default=datetime.utcnow)
 class PulseFeatures(Base):
-   class PulseFeatures(Base):
     __tablename__ = "pulse_features"
     feature_id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     recording_id = Column(

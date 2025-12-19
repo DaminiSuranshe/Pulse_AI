@@ -17,6 +17,12 @@ def extract_heart_rate(peaks, fs):
     return hr, rr_intervals
 
 
+def safe_extract_heart_rate(peaks, fs):
+    try:
+        return extract_heart_rate(peaks, fs)
+    except ValueError:
+        return 0.0, np.array([])
+
 # ----------------------------
 # HRV FEATURES
 # ----------------------------
@@ -77,17 +83,25 @@ def extract_rhythm_irregularity(rr_intervals):
 # MASTER FEATURE EXTRACTOR
 # ----------------------------
 def extract_all_features(ppg_signal, fs, peaks, beats):
-    hr, rr_intervals = extract_heart_rate(peaks, fs)
+    hr, rr_intervals = safe_extract_heart_rate(peaks, fs)
+
     sdnn, rmssd = extract_hrv(rr_intervals)
     amp_features = extract_amplitude_features(beats)
     rhythm_irregularity = extract_rhythm_irregularity(rr_intervals)
 
+    signal_valid = len(peaks) >= 2
+
     features = {
+        "signal_valid": signal_valid,
+        "detected_peaks": int(len(peaks)) if peaks is not None else 0,
+
         "heart_rate": float(hr),
         "hrv_sdnn": float(sdnn),
         "hrv_rmssd": float(rmssd),
         "pulse_irregularity": float(rhythm_irregularity),
+
         **amp_features
     }
 
     return features
+
