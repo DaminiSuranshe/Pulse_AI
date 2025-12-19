@@ -36,10 +36,24 @@ def upload_pulse(
     with open(file_path, "wb") as f:
         f.write(file.file.read())
 
-    # Load signal
     df = pd.read_csv(file_path)
-    ppg_signal = df["ppg_value"].values
+
+    # Debug: inspect incoming dataset
+    print("Uploaded CSV columns:", df.columns.tolist())
+
+    # Robust column handling
+    if "ppg_value" in df.columns:
+        ppg_signal = df["ppg_value"].values
+    elif "ppg" in df.columns:
+        ppg_signal = df["ppg"].values
+    elif "value" in df.columns:
+        ppg_signal = df["value"].values
+    else:
+        # Handle single-column CSV without header
+        ppg_signal = df.iloc[:, 0].values
+
     duration = len(ppg_signal) // sampling_rate
+
 
     # Store recording
     recording = PulseRecording(

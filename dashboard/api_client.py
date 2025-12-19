@@ -19,4 +19,12 @@ def upload_pulse(patient_id, sampling_rate, file_path):
             params={"sampling_rate": sampling_rate},
             files=files
         )
+
+    if response.status_code != 200:
+        return {
+            "error": True,
+            "status_code": response.status_code,
+            "message": response.text
+        }
+
     return response.json()

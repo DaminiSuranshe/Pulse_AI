@@ -1,21 +1,19 @@
 import math
 
 def normalize(value, min_val, max_val):
-    if value is None:
-        return 0.0
-    if isinstance(value, float) and math.isnan(value):
-        return 0.0
-    try:
-        return max(0.0, min(1.0, (value - min_val) / (max_val - min_val)))
-    except Exception:
-        return 0.0
+    if value is None or (isinstance(value, float) and math.isnan(value)):
+        return 0.5  # neutral fallback
+    return max(0, min(1, (value - min_val) / (max_val - min_val)))
 
 def compute_dosha_scores(features):
     """
     Compute Vata, Pitta, Kapha scores based on pulse features
     Robust to missing / noisy biomedical signals
     """
-
+    for key, val in features.items():
+        if val is None:
+            features[key] = 0.0
+            
     # SAFE extraction
     hr = features.get("heart_rate")
     sdnn = features.get("hrv_sdnn")

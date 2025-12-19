@@ -41,6 +41,11 @@ if st.button("Analyze Pulse"):
 
         result = upload_pulse(patient_id, sampling_rate, "temp.csv")
 
+        if "error" in result:
+            st.error("Backend error during pulse analysis")
+            st.code(result["message"])
+            st.stop()
+
         st.success("Pulse analysis completed")
 
         st.subheader("Extracted Pulse Features")
