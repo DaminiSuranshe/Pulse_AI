@@ -1,4 +1,4 @@
-from sqlalchemy import Column, String, Float, ForeignKey, Integer, DateTime
+from sqlalchemy import Column, String, Float, ForeignKey, Integer, DateTime, Boolean
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.ext.declarative import declarative_base
 from datetime import datetime
@@ -21,6 +21,7 @@ class PulseRecording(Base):
     recorded_at = Column(DateTime, default=datetime.utcnow)
 class PulseFeatures(Base):
     __tablename__ = "pulse_features"
+
     feature_id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     recording_id = Column(
         UUID(as_uuid=True),
@@ -28,12 +29,20 @@ class PulseFeatures(Base):
         nullable=False
     )
 
+    # --- Signal quality metadata ---
+    signal_valid = Column(Boolean, nullable=False, default=False)
+    detected_peaks = Column(Integer, nullable=False, default=0)
+
+    # --- Physiological features ---
     heart_rate = Column(Float, nullable=False)
     hrv_sdnn = Column(Float, nullable=False)
     hrv_rmssd = Column(Float, nullable=False)
     pulse_irregularity = Column(Float, nullable=False)
+
     pulse_amplitude_mean = Column(Float, nullable=False)
     pulse_amplitude_std = Column(Float, nullable=False)
+
+    created_at = Column(DateTime, default=datetime.utcnow)
 class DoshaAnalysis(Base):
     __tablename__ = "dosha_analysis"
     analysis_id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
