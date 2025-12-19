@@ -9,6 +9,8 @@ from signal_processing.preprocessing import bandpass_filter, detect_peaks, segme
 from signal_processing.feature_extraction import extract_all_features
 from core.dosha_mapping import compute_dosha_scores
 from utils.sanitize import sanitize_features
+import numpy as np
+from uuid import UUID
 
 router = APIRouter()
 
@@ -23,6 +25,30 @@ def get_db():
     finally:
         db.close()
 
+def load_ppg_from_csv(file_path: str) -> np.ndarray:
+    df = pd.read_csv(file_path)
+
+    # Case 1: One row, many columns (your dataset)
+    if df.shape[0] == 1:
+        signal = df.iloc[0]
+
+    # Case 2: One column, many rows
+    elif df.shape[1] == 1:
+        signal = df.iloc[:, 0]
+
+    # Case 3: Mixed columns → take numeric only
+    else:
+        numeric_df = df.select_dtypes(include=[np.number])
+        if numeric_df.empty:
+            raise ValueError("No numeric PPG data found")
+        signal = numeric_df.iloc[:, 0]
+
+    signal = signal.dropna().astype(float).values
+
+    if len(signal) < 50:
+        raise ValueError("PPG signal too short")
+
+    return signal
 
 @router.post("/pulse/upload/{patient_id}")
 def upload_pulse(
@@ -31,29 +57,22 @@ def upload_pulse(
     file: UploadFile = File(...),
     db: Session = Depends(get_db)
 ):
+    try:
+        patient_id = str(UUID(patient_id.strip()))
+    except ValueError:
+        return {"error": "Invalid patient ID format"}
+    
     # Save file
     file_path = f"{UPLOAD_DIR}/{file.filename}"
     with open(file_path, "wb") as f:
         f.write(file.file.read())
 
-    df = pd.read_csv(file_path)
+    ppg_signal = load_ppg_from_csv(file_path)
 
-    # Debug: inspect incoming dataset
-    print("Uploaded CSV columns:", df.columns.tolist())
+    print("PPG signal length:", len(ppg_signal))
+    print("PPG signal preview:", ppg_signal[:10])
 
-    # Robust column handling
-    if "ppg_value" in df.columns:
-        ppg_signal = df["ppg_value"].values
-    elif "ppg" in df.columns:
-        ppg_signal = df["ppg"].values
-    elif "value" in df.columns:
-        ppg_signal = df["value"].values
-    else:
-        # Handle single-column CSV without header
-        ppg_signal = df.iloc[:, 0].values
-
-    duration = len(ppg_signal) // sampling_rate
-
+    duration = int(len(ppg_signal) / sampling_rate)
 
     # Store recording
     recording = PulseRecording(
@@ -68,8 +87,12 @@ def upload_pulse(
 
     # Signal processing
     filtered = bandpass_filter(ppg_signal, sampling_rate)
+    print("Filtered signal min/max:", filtered.min(), filtered.max())
     peaks = detect_peaks(filtered, sampling_rate)
+    print("Number of detected peaks:", len(peaks))
     beats = segment_beats(filtered, peaks)
+    print("Peaks sample:", peaks[:10] if len(peaks) > 0 else "NO PEAKS")
+    print("Number of beats:", len(beats))
 
     features = extract_all_features(filtered, sampling_rate, peaks, beats)
     features = sanitize_features(features)
