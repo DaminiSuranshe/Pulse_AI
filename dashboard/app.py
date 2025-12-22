@@ -1,7 +1,7 @@
 import streamlit as st
 import pandas as pd
 import matplotlib.pyplot as plt
-from api_client import register_patient, upload_pulse, ml_predict
+from api_client import register_patient, upload_pulse, ml_predict,  get_recommendations 
 
 # -------------------------------------------------
 # Page Configuration
@@ -117,4 +117,26 @@ if st.button("Analyze Pulse"):
         )
         st.info(f"ML Advisory Dosha: {ml_result['ml_predicted_dosha']}")
         st.caption(ml_result.get("note", ""))
+
+st.subheader("Diet & Lifestyle Recommendations")
+
+rec = get_recommendations({
+    "dominant_dosha": dosha["dominant_dosha"],
+    "vata": dosha["vata"],
+    "pitta": dosha["pitta"],
+    "kapha": dosha["kapha"],
+    "season": "Winter"
+})
+
+st.success(f"Confidence Level: {rec['confidence_score']}")
+st.write(rec["explanation"])
+
+st.markdown("### Foods to Prefer")
+st.write(rec["recommendations"]["diet_prefer"])
+
+st.markdown("### Foods to Avoid")
+st.write(rec["recommendations"]["diet_avoid"])
+
+st.markdown("### Lifestyle Guidance")
+st.write(rec["recommendations"]["lifestyle"])
 

@@ -3,6 +3,7 @@ from fastapi import FastAPI
 from api.routes import router as core_router
 from api.ml_routes import router as ml_router
 from database.init_db import init_db
+from api.recommendation_routes import router as recommendation_router
 
 app = FastAPI(
     title="AI-Powered Ayurvedic Wellness Platform",
@@ -13,6 +14,7 @@ app = FastAPI(
 # -------- Routers --------
 app.include_router(core_router)
 app.include_router(ml_router)
+app.include_router(recommendation_router)
 
 # -------- Root Health Check --------
 @app.get("/")

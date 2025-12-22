@@ -85,3 +85,25 @@ def ml_predict(features):
             "confidence": "Low",
             "note": "Invalid ML response format"
         }
+
+def get_recommendations(dosha_data, season="winter"):
+    params = {
+        "dominant_dosha": dosha_data["dominant_dosha"],
+        "vata": dosha_data["vata"],
+        "pitta": dosha_data["pitta"],
+        "kapha": dosha_data["kapha"],
+        "season": season
+    }
+
+    try:
+        response = requests.post(
+            f"{BASE_URL}/recommendations/generate",
+            params=params,
+            timeout=10
+        )
+        return response.json()
+    except Exception as e:
+        return {
+            "error": True,
+            "message": f"Recommendation service unavailable: {e}"
+        }
