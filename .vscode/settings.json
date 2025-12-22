@@ -15,5 +15,7 @@
             "username": "postgres",
             "database": "ayurveda_ai"
         }
-    ]
+    ],
+    "python.analysis.autoImportCompletions": true,
+    "python-envs.defaultEnvManager": "ms-python.python:system"
 }
