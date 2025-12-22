@@ -1,10 +1,39 @@
 import joblib
 import pandas as pd
+from pathlib import Path
 
-dosha_model = joblib.load("ml/models/dosha_classifier.pkl")
-outcome_model = joblib.load("ml/models/outcome_predictor.pkl")
+# -------- Path Resolution (IMPORTANT) --------
+BASE_DIR = Path(__file__).resolve().parents[2]
+DOSHA_MODEL_PATH = BASE_DIR / "ml" / "models" / "dosha_classifier.pkl"
+OUTCOME_MODEL_PATH = BASE_DIR / "ml" / "models" / "outcome_predictor.pkl"
+
+# -------- Lazy-loaded Models --------
+dosha_model = None
+outcome_model = None
+
+
+def load_models():
+    global dosha_model, outcome_model
+
+    if dosha_model is None:
+        if not DOSHA_MODEL_PATH.exists():
+            raise FileNotFoundError(f"Dosha model not found at {DOSHA_MODEL_PATH}")
+        dosha_model = joblib.load(DOSHA_MODEL_PATH)
+
+    if outcome_model is None:
+        if not OUTCOME_MODEL_PATH.exists():
+            raise FileNotFoundError(f"Outcome model not found at {OUTCOME_MODEL_PATH}")
+        outcome_model = joblib.load(OUTCOME_MODEL_PATH)
+
 
 def run_ml_inference(features: dict):
+    """
+    Runs ML inference for Dosha classification
+    and treatment outcome prediction
+    """
+
+    load_models()
+
     df = pd.DataFrame([features])
 
     ml_dosha = dosha_model.predict(df)[0]
@@ -19,6 +48,6 @@ def run_ml_inference(features: dict):
 
     return {
         "ml_predicted_dosha": ml_dosha,
-        "improvement_probability": round(improvement_prob, 3),
+        "improvement_probability": round(float(improvement_prob), 3),
         "risk_level": risk
     }

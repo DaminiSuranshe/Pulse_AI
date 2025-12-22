@@ -2,6 +2,7 @@ import streamlit as st
 import pandas as pd
 import matplotlib.pyplot as plt
 from api_client import register_patient, upload_pulse
+from api_client import ml_predict
 
 st.set_page_config(
     page_title="Ayurvedic Pulse Intelligence – Practitioner Dashboard",
@@ -54,7 +55,21 @@ if st.button("Analyze Pulse"):
 
         st.subheader("Dosha Analysis")
         dosha = result["dosha_analysis"]
+        st.subheader("ML-Based Prediction")
 
+        ml_result = ml_predict(result["features"])
+
+        st.metric(
+            "Predicted Improvement Probability",
+            ml_result["improvement_probability"]
+        )
+
+        st.warning(f"Risk Assessment: {ml_result['risk_level']}")
+
+        st.info(
+            f"ML-Refined Dosha Prediction: {ml_result['ml_predicted_dosha']}"
+        )
+        
         col1, col2, col3 = st.columns(3)
         col1.metric("Vata", dosha["vata"])
         col2.metric("Pitta", dosha["pitta"])

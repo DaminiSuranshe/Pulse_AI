@@ -28,3 +28,10 @@ def upload_pulse(patient_id, sampling_rate, file_path):
         }
 
     return response.json()
+
+def ml_predict(features: dict):
+    response = requests.post(
+        f"{BASE_URL}/ml/predict",
+        json=features
+    )
+    return response.json()
