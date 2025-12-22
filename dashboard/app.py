@@ -56,6 +56,28 @@ if st.button("Analyze Pulse"):
         st.subheader("Dosha Analysis")
         dosha = result["dosha_analysis"]
         st.subheader("ML-Based Prediction")
+        EXPECTED_FEATURES = {
+            "heart_rate",
+            "hrv_rmssd",
+            "hrv_sdnn",
+            "pulse_amplitude_mean",
+            "pulse_amplitude_std",
+            "pulse_rate_variability",
+            "beat_interval_mean"
+        }
+
+        features = result["features"]
+
+        missing = EXPECTED_FEATURES - features.keys()
+        extra = features.keys() - EXPECTED_FEATURES
+
+        if missing:
+            st.error(f"Missing features: {missing}")
+            st.stop()
+
+        if extra:
+            st.warning(f"Extra features ignored: {extra}")
+            features = {k: features[k] for k in EXPECTED_FEATURES}
 
         ml_result = ml_predict(result["features"])
 

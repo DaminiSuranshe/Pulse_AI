@@ -29,9 +29,15 @@ def upload_pulse(patient_id, sampling_rate, file_path):
 
     return response.json()
 
-def ml_predict(features: dict):
+def ml_predict(features):
     response = requests.post(
         f"{BASE_URL}/ml/predict",
         json=features
     )
+
+    if response.status_code != 200:
+        raise RuntimeError(
+            f"ML API failed ({response.status_code}): {response.text}"
+        )
+
     return response.json()

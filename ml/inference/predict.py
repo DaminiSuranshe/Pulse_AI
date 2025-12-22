@@ -28,26 +28,59 @@ def load_models():
 
 def run_ml_inference(features: dict):
     """
-    Runs ML inference for Dosha classification
-    and treatment outcome prediction
+    Optional ML advisory inference.
+    Uses available pulse features only.
+    Never blocks core pulse analysis.
     """
 
-    load_models()
+    try:
+        load_models()
+    except Exception as e:
+        return {
+            "ml_predicted_dosha": "Unavailable",
+            "confidence": "Low",
+            "note": f"ML models not loaded: {str(e)}"
+        }
 
+    # Ensure DataFrame
     df = pd.DataFrame([features])
 
-    ml_dosha = dosha_model.predict(df)[0]
-    improvement_prob = outcome_model.predict_proba(df)[0][1]
+    # Adapt to model expectations
+    model_features = list(dosha_model.feature_names_in_)
+    available_features = [f for f in model_features if f in df.columns]
 
-    if improvement_prob < 0.4:
-        risk = "High Risk (Low Improvement Probability)"
-    elif improvement_prob < 0.65:
-        risk = "Moderate Response Expected"
-    else:
-        risk = "Likely Improvement"
+    if len(available_features) < 3:
+        return {
+            "ml_predicted_dosha": "Insufficient data",
+            "confidence": "Low",
+            "note": "Not enough pulse features for ML inference"
+        }
 
-    return {
-        "ml_predicted_dosha": ml_dosha,
-        "improvement_probability": round(float(improvement_prob), 3),
-        "risk_level": risk
-    }
+    try:
+        X = df[available_features]
+
+        ml_dosha = dosha_model.predict(X)[0]
+
+        improvement_prob = (
+            outcome_model.predict_proba(X)[0][1]
+            if hasattr(outcome_model, "predict_proba")
+            else None
+        )
+
+        return {
+            "ml_predicted_dosha": ml_dosha,
+            "improvement_probability": (
+                round(float(improvement_prob), 3)
+                if improvement_prob is not None
+                else None
+            ),
+            "confidence": "Medium" if improvement_prob is not None else "Low",
+            "note": "ML advisory based on available pulse features"
+        }
+
+    except Exception as e:
+        return {
+            "ml_predicted_dosha": "Unavailable",
+            "confidence": "Low",
+            "note": f"ML inference failed gracefully: {str(e)}"
+        }
