@@ -1,7 +1,6 @@
 import joblib
 import pandas as pd
 from sklearn.ensemble import RandomForestClassifier
-
 from ml.features.schema import MODEL_FEATURES
 
 # ----------------------------
