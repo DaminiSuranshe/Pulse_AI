@@ -1,7 +1,12 @@
 import streamlit as st
 import pandas as pd
 import matplotlib.pyplot as plt
-from api_client import register_patient, upload_pulse, ml_predict,  get_recommendations 
+from api_client import (
+    register_patient,
+    upload_pulse,
+    ml_predict,
+    get_recommendations
+)
 
 # -------------------------------------------------
 # Page Configuration
@@ -45,11 +50,11 @@ uploaded_file = st.file_uploader("Upload Pulse CSV", type=["csv"])
 # Main Analysis Trigger
 # -------------------------------------------------
 if st.button("Analyze Pulse"):
+
     if not uploaded_file or not patient_id:
         st.error("Please provide patient ID and pulse file")
         st.stop()
 
-    # Save temporary file
     with open("temp.csv", "wb") as f:
         f.write(uploaded_file.getbuffer())
 
@@ -57,17 +62,16 @@ if st.button("Analyze Pulse"):
 
     if "error" in result:
         st.error("Backend error during pulse analysis")
-        st.code(result.get("message", "Unknown error"))
         st.stop()
 
     st.success("Pulse analysis completed")
 
     # -------------------------------------------------
-    # Extracted Pulse Features (SOURCE OF TRUTH)
+    # Extracted Pulse Features
     # -------------------------------------------------
     st.subheader("Extracted Pulse Features")
-
     features = result["features"]
+
     features_df = pd.DataFrame(
         features.items(),
         columns=["Feature", "Value"]
@@ -75,10 +79,9 @@ if st.button("Analyze Pulse"):
     st.table(features_df)
 
     # -------------------------------------------------
-    # Dosha Analysis (PRIMARY INTERPRETATION)
+    # Dosha Analysis
     # -------------------------------------------------
     st.subheader("Dosha Analysis")
-
     dosha = result["dosha_analysis"]
 
     col1, col2, col3 = st.columns(3)
@@ -89,7 +92,6 @@ if st.button("Analyze Pulse"):
     st.info(f"**Dominant Dosha:** {dosha['dominant_dosha']}")
     st.write(dosha["explanation"])
 
-    # Visualization
     fig, ax = plt.subplots()
     ax.bar(
         ["Vata", "Pitta", "Kapha"],
@@ -100,43 +102,39 @@ if st.button("Analyze Pulse"):
     st.pyplot(fig)
 
     # -------------------------------------------------
-    # ML Advisory (OPTIONAL – NEVER BLOCKS)
+    # ML Advisory (Optional)
     # -------------------------------------------------
     st.subheader("ML Advisory (Optional)")
+    ml_result = ml_predict(features)
 
-    with st.spinner("Running ML advisory analysis..."):
-        ml_result = ml_predict(features)
-
-    if ml_result.get("ml_predicted_dosha") in ["Unavailable", "Insufficient data"]:
-        st.info("ML advisory unavailable for this pulse signal.")
-        st.caption(ml_result.get("note", ""))
-    else:
+    if ml_result.get("ml_predicted_dosha") not in ["Unavailable", None]:
         st.metric(
             "Predicted Improvement Probability",
             ml_result.get("improvement_probability", "N/A")
         )
         st.info(f"ML Advisory Dosha: {ml_result['ml_predicted_dosha']}")
-        st.caption(ml_result.get("note", ""))
+    else:
+        st.info("ML advisory unavailable for this pulse signal.")
 
-st.subheader("Diet & Lifestyle Recommendations")
+    # -------------------------------------------------
+    # Diet & Lifestyle Recommendations
+    # -------------------------------------------------
+    st.subheader("Diet & Lifestyle Recommendations")
 
-rec = get_recommendations({
-    "dominant_dosha": dosha["dominant_dosha"],
-    "vata": dosha["vata"],
-    "pitta": dosha["pitta"],
-    "kapha": dosha["kapha"],
-    "season": "Winter"
-})
+    rec = get_recommendations(dosha, season="Winter")
 
-st.success(f"Confidence Level: {rec['confidence_score']}")
-st.write(rec["explanation"])
+    if "error" in rec:
+        st.warning("Recommendations unavailable")
+        st.caption(rec.get("message", ""))
+    else:
+        st.success(f"Confidence Level: {rec['confidence_score']}")
+        st.write(rec["explanation"])
 
-st.markdown("### Foods to Prefer")
-st.write(rec["recommendations"]["diet_prefer"])
+        st.markdown("### Foods to Prefer")
+        st.write(rec["recommendations"]["diet_prefer"])
 
-st.markdown("### Foods to Avoid")
-st.write(rec["recommendations"]["diet_avoid"])
+        st.markdown("### Foods to Avoid")
+        st.write(rec["recommendations"]["diet_avoid"])
 
-st.markdown("### Lifestyle Guidance")
-st.write(rec["recommendations"]["lifestyle"])
-
+        st.markdown("### Lifestyle Guidance")
+        st.write(rec["recommendations"]["lifestyle"])
