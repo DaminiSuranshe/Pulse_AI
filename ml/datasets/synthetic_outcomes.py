@@ -15,7 +15,20 @@ def generate_outcome_label(row):
 
     return 1 if score >= 2 else 0
 
-
 def attach_outcomes(df):
     df["improved"] = df.apply(generate_outcome_label, axis=1)
     return df
+
+def generate_personalized_outcome(row):
+    score = 0
+
+    if row["vata"] < 0.5 and row["warming"]:
+        score += 1
+    if row["pitta"] < 0.5 and row["cooling"]:
+        score += 1
+    if row["kapha"] < 0.6 and row["light"]:
+        score += 1
+
+    score += np.random.choice([0, 1])
+
+    return 1 if score >= 2 else 0
